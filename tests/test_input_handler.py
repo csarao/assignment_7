@@ -73,6 +73,60 @@ class InputHandlerTests(TestCase):
         result = handler.read_input_data()
         self.assertEqual(result, [])
 
+    def test_data_validation_excludes_non_numeric_amount(self):
+        """Test that transactions with non-numeric amount are excluded."""
+        handler = InputHandler("dummy.csv")
+        transactions = [
+            {"Transaction type": "deposit", "Amount": "100"},
+            {"Transaction type": "withdrawal", "Amount": "abc"},  # invalid
+            {"Transaction type": "transfer", "Amount": "500.5"},
+        ]
+        result = handler.data_validation(transactions)
+        self.assertEqual(len(result), 2)
+        self.assertNotIn(transactions[1], result)
+        self.assertIn(transactions[0], result)
+        self.assertIn(transactions[2], result)
+
+    def test_data_validation_excludes_negative_amount(self):
+        """Test that transactions with negative amount are excluded."""
+        handler = InputHandler("dummy.csv")
+        transactions = [
+            {"Transaction type": "deposit", "Amount": "-100"},  # invalid
+            {"Transaction type": "withdrawal", "Amount": "0"},
+            {"Transaction type": "transfer", "Amount": "300"},
+        ]
+        result = handler.data_validation(transactions)
+        self.assertEqual(len(result), 2)
+        self.assertNotIn(transactions[0], result)
+        self.assertIn(transactions[1], result)
+        self.assertIn(transactions[2], result)
+
+    def test_data_validation_excludes_invalid_transaction_type(self):
+        """Test that transactions with invalid transaction type are excluded."""
+        handler = InputHandler("dummy.csv")
+        transactions = [
+            {"Transaction type": "deposit", "Amount": "1000"},
+            {"Transaction type": "invalid_type", "Amount": "500"},  # invalid
+            {"Transaction type": "withdrawal", "Amount": "200"},
+        ]
+        result = handler.data_validation(transactions)
+        self.assertEqual(len(result), 2)
+        self.assertNotIn(transactions[1], result)
+        self.assertIn(transactions[0], result)
+        self.assertIn(transactions[2], result)
+
+    def test_data_validation_all_valid_records(self):
+        """Test that all valid transactions are included in the result."""
+        handler = InputHandler("dummy.csv")
+        transactions = [
+            {"Transaction type": "deposit", "Amount": "100"},
+            {"Transaction type": "withdrawal", "Amount": "50.25"},
+            {"Transaction type": "transfer", "Amount": "1000"},
+        ]
+        result = handler.data_validation(transactions)
+        self.assertEqual(len(result), 3)
+        for transaction in transactions:
+            self.assertIn(transaction, result)
 
 if __name__ == "__main__":
     unittest.main()

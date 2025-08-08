@@ -108,3 +108,40 @@ class InputHandler:
             transactions = json.load(input_file)
 
         return transactions
+    
+    def data_validation(self, transactions: list) -> list:
+        """
+        Validates a list of transaction records.
+
+        This method checks each transaction to ensure the 'Amount' is a non-negative
+        numeric value and the 'Transaction type' is one of the accepted types:
+        'deposit', 'withdrawal', or 'transfer'. Only valid transactions are returned.
+
+        Parameters:
+            transactions (list): A list of dictionaries containing transaction data.
+
+        Returns:
+            list: A list of dictionaries containing only valid transactions.
+
+        Raises:
+            KeyError: If required keys are missing in any transaction.
+        
+        References:
+            - Python type checking and exception handling concepts from Assignments 4–6.
+            - Stack Overflow discussion on safe float conversion and validation:
+              https://stackoverflow.com/questions/209513/convert-string-to-float-or-int
+        """
+        valid_transactions = []
+        valid_types = {'deposit', 'withdrawal', 'transfer'}
+
+        for transaction in transactions:
+            try:
+                amount = float(transaction.get("Amount", -1))
+                transaction_type = transaction.get("Transaction type", "").lower()
+
+                if amount >= 0 and transaction_type in valid_types:
+                    valid_transactions.append(transaction)
+
+            except (ValueError, TypeError):
+                continue  # Skip transactions with invalid amount
+        return valid_transactions
